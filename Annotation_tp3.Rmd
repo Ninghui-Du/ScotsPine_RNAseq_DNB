@@ -1,0 +1,109 @@
+---
+title: "Untitled"
+author: "Ninghui"
+date: "2025-07-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(Biostrings)
+```
+
+```{r}
+setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project")
+fasta_file<-readAAStringSet("P.tabuliformis_V1.0.Protein.fa")
+```
+
+```{r}
+# View the protein file
+head(fasta_file)
+```
+```{r}
+# Read the significant differentially expressed genes for tp3
+setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project/tp3_R output")
+deg_ids_tp3<-read.csv("deg2_tp3 (significant genes after tidyverse).csv")$row
+```
+
+```{r}
+head(deg_ids_tp3)
+```
+
+```{r}
+main_isoforms <- fasta_file[grepl("\\.1$", names(fasta_file))]
+head(main_isoforms)
+```
+```{r}
+names(main_isoforms) <- sub("\\.1$", "", names(main_isoforms))
+head(main_isoforms)
+```
+
+```{r}
+# Extract the correlated protein sequence 
+deg_fasta_tp3<-main_isoforms[names(main_isoforms)%in%deg_ids_tp3]
+head(deg_fasta_tp3)
+```
+
+```{r}
+writeXStringSet(deg_fasta_tp3, filepath = "deg_tp3_proteins.fa")
+```
+
+```{r}
+setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project/tp3_R output")
+```
+
+```{r}
+sig_info<-read.csv("up_and_down_genes_tp3.csv")
+```
+
+```{r}
+selected_ids <- c("Pt1G07820", "Pt1G39580", "Pt1G39610", 
+                  "Pt1G01980", "Pt1G05120", "Pt1G05390", "Pt1G16290","Pt1G17840","Pt1G22500","Pt1G22740","Pt1G27830","Pt1G36850","Pt1G40610","Pt1G49790","Pt1G62270","Pt1G63370","Pt1G73520")
+```
+
+
+
+```{r}
+selected_info <- sig_info %>%
+  filter(row %in% selected_ids) %>%
+  select(row, signif)  # 只保留基因名和上下调信息
+```
+
+```{r}
+head(selected_info)
+```
+
+```{r}
+view(selected_info)
+```
+
+```{r}
+status_vector <- selected_info$signif
+```
+
+```{r}
+names(status_vector) <- selected_info$row
+```
+
+```{r}
+selected_seqs <- main_isoforms[names(main_isoforms) %in% selected_ids]
+```
+
+```{r}
+names(selected_seqs) <- paste0(names(selected_seqs), "_", status_vector[names(selected_seqs)])
+```
+
+```{r}
+selected_seqs
+```
+```{r}
+View((selected_seqs))
+```
+
+```{r}
+writeXStringSet(selected_seqs, filepath = "selected_sequences.fasta")
+```
+
