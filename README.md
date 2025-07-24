@@ -13,7 +13,7 @@ iv. P.tabuliformis_V1.0.gene.final.renamed.gtf (The annotation file of P. tabuli
 
 These files are saved on HPC.
 
-The RNA-seq data were generated from Scots pine seedlings classified as either resistant/susceptible/average to DNB infection, sampled at two timepoints (tp2 and tp3) post-inoculation. Gene counts were quantified using the nf-core pipeline, and differential expression analysis was conducted using DEseq2. For this project, the count matrices were produced using Salmon and summarized at the gene level. Differential expression was analyzed separately for each timepoint to identify significant gene expression differences between resistant and susceptible groups.
+The RNA-seq data were generated from Scots pine seedlings classified as either resistant/susceptible/average to DNB infection, sampled at two timepoints (tp2 and tp3) in natrual inoculation. Gene counts were quantified using the nf-core pipeline, and differential expression analysis was conducted using DEseq2. For this project, the count matrices were produced using Salmon and summarized at the gene level. Differential expression was analyzed separately for each timepoint to identify significant gene expression differences between resistant and susceptible groups.
 
 The input files for DESeq2, which contains:
 
@@ -34,6 +34,7 @@ ii. P.tabuliformis_V1.0.Protein.fa (This file is the protein sequence database o
 The data for significant expressed genes and P. tabuliformis protein sequence data were not uploaded due to file privacy, but these files are saved in OneDrive and Team.
 
 Repository Structure:
+
 i. DEseq2_tp2.Rmd: A markdown file about DESeq2 at tp2.
 
 ii. DEseq2_tp3.Rmd: A markdown file about DESeq2 at tp3.
