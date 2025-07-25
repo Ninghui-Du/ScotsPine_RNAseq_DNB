@@ -33,7 +33,7 @@ The input files for annotation, which contains:
 
 i. deg2_tp2 (significant genes after tidyverse).csv and deg2_tp3 (significant genes after tidyverse).csv 
 
-ii. P.tabuliformis_V1.0.Protein.fa (This file is the protein sequence database of Pinus tabuliformis, the usage of this file is to match the DEGs from Scots pine to homologous proteins in Pinus tabuliformis). On GitHub, I just showed the example of P.tabuliformis protein example with a FASTA format. (
+ii. P.tabuliformis_V1.0.Protein.fa (This file is the protein sequence database of Pinus tabuliformis, the usage of this file is to match the DEGs from Scots pine to homologous proteins in Pinus tabuliformis). On GitHub, I just showed the example of P.tabuliformis protein example with a FASTA format.)
 
 iii. up_and_down_genes_tp2.csv (This file contains the DEGs with more stringent thershold (Under the threshold of p value < 0.05 and the absolute value of log2FoldChange > 1))
 
