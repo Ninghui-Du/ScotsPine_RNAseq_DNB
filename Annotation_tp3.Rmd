@@ -14,7 +14,7 @@ library(Biostrings)
 ```
 
 ```{r}
-setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project")
+setwd("input-dir")
 fasta_file<-readAAStringSet("P.tabuliformis_V1.0.Protein.fa")
 ```
 
@@ -24,7 +24,7 @@ head(fasta_file)
 ```
 ```{r}
 # Read the significant differentially expressed genes for tp3
-setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project/tp3_R output")
+setwd("input-dir")
 deg_ids_tp3<-read.csv("deg2_tp3 (significant genes after tidyverse).csv")$row
 ```
 
@@ -52,7 +52,7 @@ writeXStringSet(deg_fasta_tp3, filepath = "deg_tp3_proteins.fa")
 ```
 
 ```{r}
-setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project/tp3_R output")
+setwd("input-dir")
 ```
 
 ```{r}
@@ -69,7 +69,7 @@ selected_ids <- c("Pt1G07820", "Pt1G39580", "Pt1G39610",
 ```{r}
 selected_info <- sig_info %>%
   filter(row %in% selected_ids) %>%
-  select(row, signif)  # 只保留基因名和上下调信息
+  select(row, signif)  
 ```
 
 ```{r}
