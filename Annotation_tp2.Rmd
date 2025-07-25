@@ -14,6 +14,7 @@ library(Biostrings)
 ```
 
 ```{r}
+# Read the Protein FASTA file
 setwd(""input-dir"")
 fasta_file<-readAAStringSet("P.tabuliformis_V1.0.Protein.fa")
 ```
@@ -36,10 +37,12 @@ deg_ids_tp2<-read.csv("deg2_tp2 (significant genes after tidyverse).csv")$row
 ```
 
 ```{r}
+# Extract Main Isoforms (".1" Transcripts)
 main_isoforms <- fasta_file[grepl("\\.1$", names(fasta_file))]
 head(main_isoforms)
 ```
 ```{r}
+# Removes the `.1` suffix from sequence names to match the gene IDs from the DEG file.
 names(main_isoforms) <- sub("\\.1$", "", names(main_isoforms))
 head(main_isoforms)
 ```
@@ -50,15 +53,18 @@ deg_fasta_tp2<-main_isoforms[names(main_isoforms)%in%deg_ids_tp2]
 head(deg_fasta_tp2)
 ```
 ```{r}
+# Write the DEGs protein sequences to a new FASTA file for BLAST
 writeXStringSet(deg_fasta_tp2, filepath = "deg_tp2_proteins.fa")
 ```
 
 ```{r}
+# Select the DEGs that have upregulated or downregulated functions
 selected_ids <- c("Pt1G72030", "Pt1G04990", "Pt1G05120", 
                   "Pt1G05390", "Pt1G27830", "Pt1G65140", "Pt1G69580")
 ```
 
 ```{r}
+# Extract correlated protein sequences for these upregulated or downregulated genes
 selected_seqs <- main_isoforms[names(main_isoforms) %in% selected_ids]
 ```
 
@@ -66,11 +72,13 @@ selected_seqs <- main_isoforms[names(main_isoforms) %in% selected_ids]
 selected_seqs
 ```
 ```{r}
+# Read the file includes these upregulated or downregulated genes
 setwd("input-dir")
 sig_info<-read.csv("up_and_down_genes_tp2.csv")
 ```
 
 ```{r}
+# Just keep the gene ID and significant information
 library(dplyr)
 selected_info <- sig_info %>%
   filter(row %in% selected_ids) %>%
@@ -78,6 +86,7 @@ selected_info <- sig_info %>%
 ```
 
 ```{r}
+# Check the gene ID and significant information
 head(selected_info)
 ```
 ```{r}
@@ -85,6 +94,7 @@ selected_info
 ```
 
 ```{r}
+# Extract the significant information
 status_vector <- selected_info$signif
 ```
 
@@ -97,10 +107,12 @@ selected_seqs <- main_isoforms[names(main_isoforms) %in% selected_ids]
 ```
 
 ```{r}
+# Extracted homologous protein sequence which has the same functions with DEGs (upregulated or downregulated functions)
 names(selected_seqs) <- paste0(names(selected_seqs), "_", status_vector[names(selected_seqs)])
 ```
 
 ```{r}
+# Check these protein sequences with functions
 selected_seqs
 ```
 
