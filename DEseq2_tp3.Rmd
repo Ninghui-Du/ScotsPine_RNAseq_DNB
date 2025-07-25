@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd("C:/Users/nindu/OneDrive - UKCEH/MSc Project")
+setwd("input-dir")
 ```
 
 ```{r}
@@ -42,7 +42,7 @@ mode(count_matrix) <- "integer"
 ```
 
 ```{r}
-# Extract tp2 samples from count_matrix
+# Extract tp3 samples from count_matrix
 tp3_samples <- colnames(count_matrix)[grepl("^T3", colnames(count_matrix))]
 meta_tp3 <- meta_data %>%
   filter(sample_id %in% tp3_samples) %>%
@@ -83,7 +83,7 @@ colData(dds)
 ```
 
 ```{r}
-# access individual metadata variables 访问元数据中的某一列变量
+# access individual metadata variables 
 dds$NR_AUDPS_raw_group
 
 # reassign individual metadata variables 
