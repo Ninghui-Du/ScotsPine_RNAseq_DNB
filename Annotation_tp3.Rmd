@@ -14,6 +14,7 @@ library(Biostrings)
 ```
 
 ```{r}
+# Read the Protein FASTA file
 setwd("input-dir")
 fasta_file<-readAAStringSet("P.tabuliformis_V1.0.Protein.fa")
 ```
@@ -33,10 +34,12 @@ head(deg_ids_tp3)
 ```
 
 ```{r}
+# Extract Main Isoforms (".1" Transcripts)
 main_isoforms <- fasta_file[grepl("\\.1$", names(fasta_file))]
 head(main_isoforms)
 ```
 ```{r}
+# Removes the `.1` suffix from sequence names to match the gene IDs from the DEG file.
 names(main_isoforms) <- sub("\\.1$", "", names(main_isoforms))
 head(main_isoforms)
 ```
@@ -48,6 +51,7 @@ head(deg_fasta_tp3)
 ```
 
 ```{r}
+# Write the DEGs protein sequences to a new FASTA file for BLAST
 writeXStringSet(deg_fasta_tp3, filepath = "deg_tp3_proteins.fa")
 ```
 
@@ -56,10 +60,12 @@ setwd("input-dir")
 ```
 
 ```{r}
+# Read the file includes these upregulated or downregulated genes
 sig_info<-read.csv("up_and_down_genes_tp3.csv")
 ```
 
 ```{r}
+# Select the DEGs that have upregulated or downregulated functions
 selected_ids <- c("Pt1G07820", "Pt1G39580", "Pt1G39610", 
                   "Pt1G01980", "Pt1G05120", "Pt1G05390", "Pt1G16290","Pt1G17840","Pt1G22500","Pt1G22740","Pt1G27830","Pt1G36850","Pt1G40610","Pt1G49790","Pt1G62270","Pt1G63370","Pt1G73520")
 ```
@@ -67,12 +73,14 @@ selected_ids <- c("Pt1G07820", "Pt1G39580", "Pt1G39610",
 
 
 ```{r}
+# Just keep the gene ID and significant information
 selected_info <- sig_info %>%
   filter(row %in% selected_ids) %>%
   select(row, signif)  
 ```
 
 ```{r}
+# Check the gene ID and significant information
 head(selected_info)
 ```
 
@@ -81,6 +89,7 @@ view(selected_info)
 ```
 
 ```{r}
+# Extract the significant information
 status_vector <- selected_info$signif
 ```
 
@@ -93,6 +102,7 @@ selected_seqs <- main_isoforms[names(main_isoforms) %in% selected_ids]
 ```
 
 ```{r}
+# Extracted homologous protein sequence which has the same functions with DEGs (upregulated or downregulated functions)
 names(selected_seqs) <- paste0(names(selected_seqs), "_", status_vector[names(selected_seqs)])
 ```
 
