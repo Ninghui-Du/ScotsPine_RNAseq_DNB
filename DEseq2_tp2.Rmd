@@ -425,3 +425,13 @@ head(res_clean)
 ```{r}
 View(res_clean)
 ```
+
+```{r}
+up_genes <- res_clean %>%
+  filter(padj < 0.05, log2FoldChange > 1)
+```
+
+```{r}
+down_genes <- res_clean %>%
+  filter(padj < 0.05, log2FoldChange < -1)
+```
