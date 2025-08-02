@@ -1,1 +1,346 @@
+---
+title: "DESeq2 for timepoint3"
+author: "Ninghui"
+date: "2025-07-08"
+output: html_document
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("input-dir")
+```
+
+```{r}
+library(DESeq2)
+library(ggrepel)
+library(ggtext)
+library(here)
+library(magrittr)
+library(pheatmap)
+library(tidyverse)
+```
+
+```{r}
+# expt metadata
+meta_data<-read_csv("Metadata.csv")
+# count data
+count_data <- read_tsv("salmon.merged.gene_counts.tsv")
+```
+
+```{r}
+# wrangle count data
+count_matrix <- count_data %>%
+  dplyr::select(-gene_name) %>%        
+  tibble::column_to_rownames("gene_id") %>%
+  as.matrix() %>%
+  round() 
+# coerce storage mode from double to integer
+mode(count_matrix) <- "integer"
+```
+
+```{r}
+# Extract tp3 samples from count_matrix
+tp3_samples <- colnames(count_matrix)[grepl("^T3", colnames(count_matrix))]
+meta_tp3 <- meta_data %>%
+  filter(sample_id %in% tp3_samples) %>%
+  dplyr::select(sample_id, NR_AUDPS_raw_group) %>%
+  mutate(NR_AUDPS_raw_group = factor(NR_AUDPS_raw_group)) %>%
+  column_to_rownames("sample_id")
+head(meta_tp3)
+```
+
+```{r}
+# Extract the same row names from count_matrix
+count_tp3 <- count_matrix[, rownames(meta_tp3)]
+head(count_tp3)
+```
+
+```{r}
+# create the DESeq2 data set object
+dds <- DESeqDataSetFromMatrix(
+  countData = count_tp3,
+  colData = meta_tp3,
+  design = ~ NR_AUDPS_raw_group
+)
+```
+
+```{r}
+print(dds)
+```
+
+```{r}
+# retrieve the counts data from a DESeqDataSet
+counts(dds)
+assay(dds)
+```
+
+```{r}
+# retrieve the metadata from a DESeqDataSet
+colData(dds)
+```
+
+```{r}
+# access individual metadata variables 
+dds$NR_AUDPS_raw_group
+
+# reassign individual metadata variables 
+dds$NR_AUDPS_raw_group <- as.factor(dds$NR_AUDPS_raw_group)
+```
+
+```{r}
+# total reads for the first sample
+sum(counts(dds)[ ,1])
+
+# total reads for all samples
+colSums(counts(dds))
+```
+
+```{r}
+meta_tp3 <- rownames_to_column(meta_tp3, var = "sample_id")
+head(meta_tp3)
+head(count_tp3)
+```
+
+```{r}
+lib_size <- colSums(count_tp3)
+lib_size
+```
+```{r}
+# Add lib_size to meta_tp2
+meta_tp3$lib_size <- lib_size[meta_tp3$sample_id]
+head(meta_tp3)
+```
+
+```{r}
+meta_tp3$group_short <- substr(meta_tp3$NR_AUDPS_raw_group, 1, 1)
+head(meta_tp3)
+```
+
+```{r}
+library(dplyr)
+meta_tp3 <- meta_tp3 |>
+  group_by(group_short) |>
+  mutate(label = paste0(group_short, row_number())) |>
+  ungroup()
+head(meta_tp3)
+```
+
+```{r}
+ggplot(meta_tp3, aes(x = label, y = lib_size / 1e5)) +  
+  geom_col(fill = "midnightblue", alpha = 0.6) +
+  geom_hline(yintercept = 20, linetype = "dashed", colour = "darkred") +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.x = element_blank()
+  ) +
+  labs(
+    title = "Library Size per Sample (Timepoint 3)",
+    x = "Sample ID",
+    y = "Library Size (Million Reads)"
+  )
+```
+
+```{r}
+# transform the counts data
+vsd <- vst(dds, blind = TRUE)
+```
+
+```{r}
+# plot PCA using DESeq2
+PCA_plot_tp3<-plotPCA(vsd, intgroup = "NR_AUDPS_raw_group", ntop = 500)
+```
+
+```{r}
+# 从中提取前 500 个变异最大的基因用于 PCA。
+pca_res <- 
+  vsd %>%
+  plotPCA(intgroup = "NR_AUDPS_raw_group", ntop = 500, returnData = TRUE) %>%
+  janitor::clean_names() %>%
+  left_join(meta_tp3, by = c("name" = "sample_id")) %>%  # 合并元信息
+  dplyr::select(name, group = nr_audps_raw_group, pc1, pc2)     # 简化保留列
+```
+```{r}
+# 整理 PCA 结果
+perc_var <- 
+  attr(pca_res, "percentVar") %>%
+  multiply_by(100) %>%
+  round(2)
+```
+```{r}
+colnames(pca_res)
+head(pca_res)
+```
+
+```{r}
+pca_res <- pca_res %>%
+  group_by(group) %>%
+  mutate(rep = row_number(),
+         label = str_c(str_sub(group, 1, 1))) %>%
+  ungroup()
+head(pca_res)
+```
+
+```{r}
+ggplot(pca_res, aes(x = pc1, y = pc2)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "midnightblue", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed", colour = "midnightblue", alpha = 0.5) +
+  geom_point(aes(fill = group), colour = "transparent", size = 4, shape = 21, alpha = 0.4) +
+  geom_point(aes(colour = group), fill = "transparent", size = 4, shape = 21, stroke = 1) +
+  geom_text_repel(
+    aes(label = label),
+    seed = 123,
+    point.padding = 10,
+    nudge_y = -0.1,
+    size = 3.5,
+    max.overlaps = Inf  
+  ) +
+  scale_x_continuous(limits = c(-30, 30), breaks = seq(-30, 30, 5)) +
+  scale_y_continuous(limits = c(-15, 15), breaks = seq(-15, 15, 5)) +
+  scale_shape_manual(values = c(21, 22)) +
+  theme(
+    axis.title = element_markdown(),
+    legend.title = element_text(face = "bold"),
+    panel.grid.major = element_line(linetype = "dotted")
+  ) +
+  labs(
+    x = str_c("<strong>PC1</strong> (", perc_var[[1]], "%)"),
+    y = str_c("<strong>PC2</strong> (", perc_var[[2]], "%)"),
+    colour = "Group",
+    fill = "Group"
+  )
+```
+
+```{r}
+summary(pca_res)
+```
+
+```{r}
+# one function to control them all and in the darkness bind them
+de <- DESeq(dds)
+```
+
+```{r}
+# obtain differential expression testing results tp3
+results(de)
+```
+
+```{r}
+## Define contrasts for differential expression
+contrast_de <- c("NR_AUDPS_raw_group", "Susceptible", "Resistant")
+```
+```{r}
+## Extract results for susceptible vs resistant
+res_tableDE <- results(de, contrast=contrast_de)
+```
+
+```{r}
+res_tableDE
+```
+
+```{r}
+# obtain tidyverse-compatible DE testing results
+res <-
+  results(de, contrast =contrast_de, tidy = TRUE) %>%
+  tibble()
+```
+
+```{r}
+# preview results
+print(res)
+```
+
+```{r}
+# basic volcano plot
+res_clean <- res %>%
+  filter(!is.na(log2FoldChange) & !is.na(pvalue) & !is.na(padj))
+ggplot(res_clean, aes(x = log2FoldChange, y = -log10(pvalue))) +
+  geom_point()
+```
+
+```{r}
+# simple coloured points
+res_clean %>%
+  mutate(signif = padj < 0.05 & abs(log2FoldChange) > 1) %>%
+  ggplot(aes(x = log2FoldChange, y = -log10(pvalue), colour = signif)) +
+  geom_jitter(width = 0.5, height = 0, alpha = 0.6, size = 1.5) +
+  scale_color_manual(values = c("FALSE" = "gray70", "TRUE" = "deepskyblue3")) +
+  labs(
+    title = "Significantly Differentially Expressed Genes - timepoint3",
+    x = "log2(Fold Change)",
+    y = "-log10(p-value)",
+    colour = "Significance"
+  ) +
+  theme_bw(base_size = 14)
+```
+
+```{r}
+# differential coloured points
+res_clean %>%
+
+  mutate(signif = case_when(
+
+    padj < 0.05 & log2FoldChange > 1  ~ "Up",
+
+    padj < 0.05 & log2FoldChange < -1 ~ "Down",
+
+    TRUE                              ~ "NS"
+
+  )) %>%
+
+  ggplot(aes(x = log2FoldChange, y = -log10(pvalue), colour = signif)) +
+
+  geom_jitter(width = 0.4, height = 0, alpha = 0.6, size = 1.5) +
+
+  scale_color_manual(
+
+    values = c("NS" = "grey60", "Up" = "red", "Down" = "blue"),
+
+    name = "Significance",
+
+    labels = c("Down-regulated (vs. Susceptible)", 
+
+               "Not significant", 
+
+               "Up-regulated (vs. Susceptible)")
+
+  ) +
+
+  theme_minimal(base_size = 14) +
+
+  labs(
+
+    x = "log2(Fold Change)",
+
+    y = "-log10(p-value)",
+
+    title = "Differentially Expressed Genes vs. Susceptible - timepoint3"
+
+  )+
+  theme_bw(base_size = 14)
+
+```
+
+```{r}
+head(res_clean)
+```
+
+```{r}
+up_genes <- res_clean %>%
+  filter(padj < 0.05, log2FoldChange > 1)
+```
+
+```{r}
+up_genes
+```
+
+```{r}
+down_genes <- res_clean %>%
+  filter(padj < 0.05, log2FoldChange < -1)
+```
+
+```{r}
+down_genes
+```
